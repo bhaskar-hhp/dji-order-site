@@ -3,848 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DJI Product Ordering</title>
+  <title>DJI Sales - Purchase Order</title>
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --panel-soft: #eef3f8;
-      --text: #17212b;
-      --muted: #667789;
-      --line: #d9e2ec;
-      --accent: #0f7fd1;
-      --accent-dark: #0a64a7;
-      --success: #128c7e;
-      --danger: #c03b3b;
-      --shadow: 0 18px 50px rgba(23, 33, 43, 0.12);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(15, 127, 209, 0.12), transparent 34rem),
-        linear-gradient(135deg, #f7f9fc 0%, #edf2f7 100%);
-    }
-
-    .shell {
-      width: min(1120px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 22px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 46px;
-      height: 46px;
-      border-radius: 8px;
-      background: #111820;
-      color: #ffffff;
-      font-weight: 800;
-      letter-spacing: 0;
-      box-shadow: 0 10px 30px rgba(17, 24, 32, 0.2);
-      flex: 0 0 auto;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(1.25rem, 2vw, 1.85rem);
-      line-height: 1.12;
-    }
-
-    .brand p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 0.94rem;
-    }
-
-    .contact-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 42px;
-      padding: 0 14px;
-      border: 1px solid rgba(18, 140, 126, 0.28);
-      border-radius: 999px;
-      color: #0f6f64;
-      background: rgba(18, 140, 126, 0.08);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
-      gap: 24px;
-      align-items: start;
-    }
-
-    .panel {
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid rgba(217, 226, 236, 0.9);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .visual {
-      position: relative;
-      min-height: 250px;
-      padding: 30px;
-      color: #ffffff;
-      background:
-        linear-gradient(120deg, rgba(17, 24, 32, 0.95), rgba(19, 56, 82, 0.86)),
-        linear-gradient(135deg, #101820, #1e6b99);
-    }
-
-    .visual-content {
-      position: relative;
-      z-index: 1;
-      max-width: 430px;
-    }
-
-    .visual h2 {
-      margin: 0;
-      font-size: clamp(1.7rem, 4vw, 3.3rem);
-      line-height: 1.02;
-      letter-spacing: 0;
-    }
-
-    .visual p {
-      margin: 14px 0 0;
-      color: rgba(255, 255, 255, 0.78);
-      line-height: 1.6;
-    }
-
-    .device-scene {
-      position: absolute;
-      right: clamp(18px, 5vw, 58px);
-      bottom: 22px;
-      width: min(310px, 46%);
-      aspect-ratio: 1.45;
-      pointer-events: none;
-    }
-
-    .camera-body {
-      position: absolute;
-      right: 0;
-      bottom: 10%;
-      width: 68%;
-      height: 58%;
-      border-radius: 8px;
-      background: linear-gradient(145deg, #222d37, #0f151b);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 26px 45px rgba(0, 0, 0, 0.36);
-    }
-
-    .camera-lens {
-      position: absolute;
-      left: 11%;
-      top: 16%;
-      width: 38%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 38% 34%, #8fd7ff 0 7%, transparent 8%),
-        radial-gradient(circle, #1c94cb 0 23%, #071219 24% 49%, #4b5964 50% 59%, #111820 60%);
-      border: 6px solid #303b46;
-    }
-
-    .camera-screen {
-      position: absolute;
-      right: 12%;
-      top: 18%;
-      width: 32%;
-      height: 58%;
-      border-radius: 6px;
-      background: linear-gradient(160deg, #40b4e8, #d9f5ff);
-      opacity: 0.9;
-    }
-
-    .gimbal {
-      position: absolute;
-      left: 4%;
-      bottom: 0;
-      width: 24%;
-      height: 88%;
-      border-radius: 22px;
-      background: linear-gradient(145deg, #e9eef3, #aab8c5);
-      transform: rotate(-9deg);
-      box-shadow: 0 24px 45px rgba(0, 0, 0, 0.25);
-    }
-
-    .gimbal::before {
-      content: "";
-      position: absolute;
-      top: -18%;
-      left: 4%;
-      width: 112%;
-      height: 30%;
-      border-radius: 8px;
-      background: #161f28;
-      transform: rotate(11deg);
-    }
-
-    .product-section {
-      padding: 22px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .section-head h2,
-    .form-panel h2 {
-      margin: 0;
-      font-size: 1.2rem;
-      line-height: 1.2;
-    }
-
-    .section-head span {
-      color: var(--muted);
-      font-size: 0.9rem;
-      white-space: nowrap;
-    }
-
-    .product-list {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      max-height: 430px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .product-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 74px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #ffffff;
-      cursor: pointer;
-      text-align: left;
-      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-    }
-
-    .product-item:hover,
-    .product-item:focus-visible {
-      border-color: rgba(15, 127, 209, 0.55);
-      box-shadow: 0 10px 24px rgba(15, 127, 209, 0.12);
-      outline: none;
-      transform: translateY(-1px);
-    }
-
-    .product-item.active {
-      border-color: var(--accent);
-      background: #f0f8ff;
-    }
-
-    .product-item.active::before {
-      content: "✓";
-      display: grid;
-      place-items: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      color: #ffffff;
-      background: var(--accent);
-      font-weight: 900;
-      flex: 0 0 auto;
-    }
-
-    .product-name {
-      font-size: 0.88rem;
-      font-weight: 700;
-      line-height: 1.35;
-      color: var(--text);
-    }
-
-    .product-price {
-      color: var(--accent-dark);
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .form-panel {
-      padding: 24px;
-      position: sticky;
-      top: 18px;
-    }
-
-    .form-panel p {
-      margin: 8px 0 22px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .field {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #314153;
-      font-size: 0.92rem;
-      font-weight: 700;
-    }
-
-    input,
-    select {
-      width: 100%;
-      min-height: 48px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 0 13px;
-      color: var(--text);
-      background: #ffffff;
-      font: inherit;
-      outline: none;
-      transition: border-color 160ms ease, box-shadow 160ms ease;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(15, 127, 209, 0.12);
-    }
-
-    .error {
-      display: none;
-      margin-top: 6px;
-      color: var(--danger);
-      font-size: 0.84rem;
-      font-weight: 700;
-    }
-
-    .field.invalid input,
-    .field.invalid select {
-      border-color: var(--danger);
-    }
-
-    .field.invalid .error {
-      display: block;
-    }
-
-    .selected-box {
-      margin: 18px 0;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #ffffff;
-      overflow: hidden;
-    }
-
-    .selected-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 13px 14px;
-      border-bottom: 1px solid var(--line);
-      background: var(--panel-soft);
-      color: #314153;
-      font-size: 0.92rem;
-      font-weight: 800;
-    }
-
-    .selected-count {
-      color: var(--accent-dark);
-      white-space: nowrap;
-    }
-
-    .selected-list {
-      display: grid;
-      gap: 0;
-      max-height: 330px;
-      overflow: auto;
-    }
-
-    .selected-empty {
-      padding: 18px 14px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
-
-    .selected-item {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 86px 32px;
-      gap: 10px;
-      align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .selected-item:last-child {
-      border-bottom: 0;
-    }
-
-    .selected-title {
-      min-width: 0;
-    }
-
-    .selected-title strong {
-      display: block;
-      font-size: 0.9rem;
-      line-height: 1.35;
-    }
-
-    .selected-title span {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 0.84rem;
-    }
-
-    .selected-qty {
-      min-height: 40px;
-      padding: 0 8px;
-      text-align: center;
-    }
-
-    .remove-btn {
-      display: grid;
-      place-items: center;
-      width: 32px;
-      height: 32px;
-      border: 1px solid #f0c4c4;
-      border-radius: 8px;
-      color: var(--danger);
-      background: #fff7f7;
-      font-size: 1.2rem;
-      line-height: 1;
-      cursor: pointer;
-    }
-
-    .remove-btn:hover,
-    .remove-btn:focus-visible {
-      border-color: var(--danger);
-      outline: none;
-    }
-
-    .total-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin: 20px 0;
-      padding: 16px;
-      border: 1px solid #cfe5f7;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #f2f9ff, #ffffff);
-    }
-
-    .total-box span {
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .total-box strong {
-      color: var(--accent-dark);
-      font-size: clamp(1.25rem, 3vw, 1.6rem);
-      white-space: nowrap;
-    }
-
-    .submit-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      min-height: 52px;
-      border: 0;
-      border-radius: 8px;
-      color: #ffffff;
-      background: linear-gradient(135deg, var(--success), #19a48f);
-      font: inherit;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 14px 30px rgba(18, 140, 126, 0.25);
-      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
-    }
-
-    .submit-btn:hover,
-    .submit-btn:focus-visible {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 36px rgba(18, 140, 126, 0.28);
-      filter: brightness(1.02);
-      outline: none;
-    }
-
-    .note {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 0.86rem;
-      text-align: center;
-    }
-
-    @media (max-width: 880px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-panel {
-        position: static;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .shell {
-        width: min(100% - 22px, 1120px);
-        padding: 18px 0;
-      }
-
-      .topbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .contact-pill {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .visual {
-        min-height: 300px;
-        padding: 22px;
-      }
-
-      .visual-content {
-        max-width: none;
-      }
-
-      .device-scene {
-        width: min(280px, 82%);
-        right: 18px;
-        opacity: 0.64;
-      }
-
-      .product-section,
-      .form-panel {
-        padding: 18px;
-      }
-
-      .section-head {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .product-list {
-        grid-template-columns: 1fr;
-        max-height: 330px;
-      }
-
-      .product-item {
-        min-height: 68px;
-      }
-
-      .selected-item {
-        grid-template-columns: minmax(0, 1fr) 74px 32px;
-        padding: 12px;
-      }
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; padding: 1rem; }
+    .container { background: white; border-radius: 1rem; box-shadow: 0 4px 24px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 420px; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; color: #0f172a; }
+    .subtitle { font-size: 0.875rem; color: #64748b; margin-bottom: 1.5rem; }
+    .logo { color: #2563eb; font-weight: 700; font-size: 1.25rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.375rem; }
+    input { width: 100%; padding: 0.625rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    button { width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 0.5rem; }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .msg { margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; display: none; text-align: center; }
+    .msg.success { display: block; background: #dcfce7; color: #166534; }
+    .msg.error { display: block; background: #fee2e2; color: #991b1b; }
+    .msg.loading { display: block; background: #eff6ff; color: #1e40af; }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">DJI</div>
-        <div>
-          <h1>DJI Product Ordering</h1>
-          <p>Fast WhatsApp ordering with live MOP pricing.</p>
-        </div>
+  <div class="container">
+    <div class="logo">DJI Sales</div>
+    <h1>Purchase Order</h1>
+    <p class="subtitle">Fill in the details to place your order</p>
+
+    <form id="orderForm">
+      <div class="form-group">
+        <label for="name">Retailer Name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. John's Drones" required>
       </div>
-      <div class="contact-pill" aria-label="WhatsApp order number">WhatsApp: +91 70052 05093</div>
-    </header>
-
-    <section class="grid">
-      <div class="panel">
-        <section class="visual" aria-label="DJI camera and mobile stabilizer visual">
-          <div class="visual-content">
-            <h2>Order DJI gear in one clean flow.</h2>
-            <p>Select one or more products, set quantities, and send a ready-made order message directly to WhatsApp.</p>
-          </div>
-          <div class="device-scene" aria-hidden="true">
-            <div class="gimbal"></div>
-            <div class="camera-body">
-              <div class="camera-lens"></div>
-              <div class="camera-screen"></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="product-section">
-          <div class="section-head">
-            <h2>Product List</h2>
-            <span>Product Name + MOP Price</span>
-          </div>
-          <div class="product-list" id="productList" aria-label="Selectable DJI product list"></div>
-        </section>
+      <div class="form-group">
+        <label for="model">Drone Model</label>
+        <input type="text" id="model" name="model" placeholder="e.g. DJI Mini 4 Pro" required>
       </div>
+      <div class="form-group">
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity" min="1" placeholder="e.g. 10" required>
+      </div>
+      <button type="submit" id="submitBtn">Submit Order</button>
+    </form>
 
-      <aside class="panel form-panel" aria-label="Order form">
-        <h2>Create Order</h2>
-        <p>Fill the customer details and submit to open WhatsApp with the full order text.</p>
-
-        <form id="orderForm" novalidate>
-          <div class="field" id="nameField">
-            <label for="customerName">Customer Name</label>
-            <input id="customerName" name="customerName" type="text" autocomplete="name" placeholder="Enter customer name">
-            <div class="error">Please enter the customer name.</div>
-          </div>
-
-          <div class="field" id="productField">
-            <label>Product Selection</label>
-            <div class="selected-box">
-              <div class="selected-head">
-                <span>Selected Products</span>
-                <span class="selected-count" id="selectedCount">0 items</span>
-              </div>
-              <div class="selected-list" id="selectedList">
-                <div class="selected-empty">Tap products from the list to add them to this order.</div>
-              </div>
-            </div>
-            <div class="error">Please select at least one product and enter valid quantities.</div>
-          </div>
-
-          <div class="total-box" aria-live="polite">
-            <span>Total MOP</span>
-            <strong id="totalPrice">₹0</strong>
-          </div>
-
-          <button class="submit-btn" type="submit">Send Order on WhatsApp</button>
-          <div class="note">A success alert appears before WhatsApp opens.</div>
-        </form>
-      </aside>
-    </section>
-  </main>
+    <div id="msg" class="msg"></div>
+  </div>
 
   <script>
-    const products = [
-      { name: "DJI OSMO 360 ADVENTURE COMBO", price: 54990 },
-      { name: "DJI OSMO ACTION 4 ADVENTURE COMBO", price: 34990 },
-      { name: "DJI OSMO ACTION 5 PRO ADVENTURE COMBO", price: 45990 },
-      { name: "DJI OSMO ACTION 6 ADVENTURE COMBO", price: 54990 },
-      { name: "DJI OSMO MOBILE 7", price: 6998 },
-      { name: "DJI OSMO MOBILE 7 P", price: 9590 },
-      { name: "DJI OSMO MOBILE 8", price: 13990 },
-      { name: "DJI OSMO MOBILE SE", price: 5999 },
-      { name: "DJI OSMO NANO (64 GB)", price: 29990 },
-      { name: "DJI POCKET 3 CREATOR COMBO", price: 60990 },
-      { name: "DJI OSMO ACTION 6 STANDARD", price: 44990 },
-      { name: "DJI OSMO ACTION 5 PRO STANDARD COMBO", price: 35990 },
-      { name: "DJI OSMO ACTION 4 STANDARD COMBO", price: 24990 },
-      { name: "DJI OSMO 360 STANDARD COMBO", price: 44990 },
-      { name: "DJI OSMO NANO (128 GB)", price: 34990 },
-      { name: "DJI POCKET 3", price: 40990 },
-      { name: "DJI OSMO MOBILE 8 STANDARD", price: 9590 }
-    ];
+    const FORM_URL = 'https://script.google.com/macros/s/AKfycbzrC6ihPSTubEsX_RRaqN-4E7jPjMSIfxn3VAAPuVKYigqBFOxykBfq98aPgRErcuA_Uw/exec';
 
-    const whatsappNumber = "917005205093";
-    const productList = document.getElementById("productList");
-    const selectedList = document.getElementById("selectedList");
-    const selectedCount = document.getElementById("selectedCount");
-    const customerNameInput = document.getElementById("customerName");
-    const totalPrice = document.getElementById("totalPrice");
-    const orderForm = document.getElementById("orderForm");
-    const selectedItems = new Map();
-    const fields = {
-      name: document.getElementById("nameField"),
-      product: document.getElementById("productField")
-    };
+    const form = document.getElementById('orderForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const msg = document.getElementById('msg');
 
-    const formatPrice = (value) => new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(value);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg loading';
+      msg.textContent = 'Submitting order...';
+      msg.style.display = 'block';
+      submitBtn.disabled = true;
 
-    function renderProducts() {
-      products.forEach((product, index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "product-item";
-        button.dataset.index = String(index);
-        button.setAttribute("aria-pressed", "false");
-        button.innerHTML = `
-          <span class="product-name">${product.name}</span>
-          <span class="product-price">${formatPrice(product.price)}</span>
-        `;
-        button.addEventListener("click", () => {
-          toggleProduct(index);
-          syncActiveProduct();
-          renderSelectedItems();
-          updateTotal();
-          clearFieldError(fields.product);
-        });
-        productList.appendChild(button);
-      });
-    }
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        model: document.getElementById('model').value.trim(),
+        quantity: document.getElementById('quantity').value
+      };
 
-    function toggleProduct(index) {
-      if (selectedItems.has(index)) {
-        selectedItems.delete(index);
-      } else {
-        selectedItems.set(index, 1);
-      }
-    }
-
-    function updateTotal() {
-      const total = getOrderItems().reduce((sum, item) => {
-        const validQuantity = Number.isInteger(item.quantity) && item.quantity > 0 ? item.quantity : 0;
-        return sum + item.product.price * validQuantity;
-      }, 0);
-      totalPrice.textContent = formatPrice(total);
-    }
-
-    function syncActiveProduct() {
-      document.querySelectorAll(".product-item").forEach((item) => {
-        const isSelected = selectedItems.has(Number(item.dataset.index));
-        item.classList.toggle("active", isSelected);
-        item.setAttribute("aria-pressed", String(isSelected));
-      });
-    }
-
-    function clearFieldError(field) {
-      field.classList.remove("invalid");
-    }
-
-    function getOrderItems() {
-      return Array.from(selectedItems.entries()).map(([index, quantity]) => ({
-        product: products[index],
-        quantity
-      }));
-    }
-
-    function renderSelectedItems() {
-      const items = getOrderItems();
-      selectedCount.textContent = `${items.length} ${items.length === 1 ? "item" : "items"}`;
-
-      if (!items.length) {
-        selectedList.innerHTML = '<div class="selected-empty">Tap products from the list to add them to this order.</div>';
-        return;
-      }
-
-      selectedList.innerHTML = "";
-      selectedItems.forEach((quantity, index) => {
-        const product = products[index];
-        const row = document.createElement("div");
-        row.className = "selected-item";
-        row.innerHTML = `
-          <div class="selected-title">
-            <strong>${product.name}</strong>
-            <span>${formatPrice(product.price)} each</span>
-          </div>
-          <input class="selected-qty" type="number" min="1" step="1" value="${quantity}" inputmode="numeric" aria-label="Quantity for ${product.name}">
-          <button class="remove-btn" type="button" aria-label="Remove ${product.name}">×</button>
-        `;
-
-        const quantityInput = row.querySelector(".selected-qty");
-        quantityInput.addEventListener("input", () => {
-          const nextQuantity = Number.parseInt(quantityInput.value, 10);
-          selectedItems.set(index, nextQuantity);
-          updateTotal();
-          clearFieldError(fields.product);
+      try {
+        const res = await fetch(FORM_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
 
-        row.querySelector(".remove-btn").addEventListener("click", () => {
-          selectedItems.delete(index);
-          syncActiveProduct();
-          renderSelectedItems();
-          updateTotal();
-        });
-
-        selectedList.appendChild(row);
-      });
-    }
-
-    function validateForm() {
-      let isValid = true;
-      const name = customerNameInput.value.trim();
-      const items = getOrderItems();
-      const hasInvalidQuantity = items.some((item) => !Number.isInteger(item.quantity) || item.quantity < 1);
-
-      if (!name) {
-        fields.name.classList.add("invalid");
-        isValid = false;
-      } else {
-        clearFieldError(fields.name);
+        msg.className = 'msg success';
+        msg.textContent = 'Order submitted successfully!';
+        form.reset();
+      } catch (err) {
+        msg.className = 'msg error';
+        msg.textContent = 'Failed to submit order. Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+        setTimeout(() => { msg.style.display = 'none'; }, 4000);
       }
-
-      if (!items.length || hasInvalidQuantity) {
-        fields.product.classList.add("invalid");
-        isValid = false;
-      } else {
-        clearFieldError(fields.product);
-      }
-
-      return isValid;
-    }
-
-    customerNameInput.addEventListener("input", () => {
-      clearFieldError(fields.name);
     });
-
-    orderForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      if (!validateForm()) {
-        return;
-      }
-
-      const name = customerNameInput.value.trim();
-      const items = getOrderItems();
-      const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-      const productLines = items.map((item, index) => {
-        const lineTotal = item.product.price * item.quantity;
-        return `${index + 1}. ${item.product.name} - ${formatPrice(item.product.price)} x ${item.quantity} = ${formatPrice(lineTotal)}`;
-      }).join("\n");
-      const message = `New DJI Order:
-Name: ${name}
-Products:
-${productLines}
-
-Total MOP: ${formatPrice(total)}`;
-
-      alert("Order details are ready. WhatsApp will open next.");
-      window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    });
-
-    renderProducts();
-    renderSelectedItems();
-    updateTotal();
   </script>
 </body>
 </html>
