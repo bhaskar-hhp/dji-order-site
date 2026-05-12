@@ -203,7 +203,8 @@
         <form id="orderForm">
           <div class="form-group">
             <label for="name">Partner Name</label>
-            <input type="text" id="name" name="name" placeholder="e.g. John's Drones" required>
+            <input type="text" id="name" name="name" placeholder="e.g. John's Drones" required style="text-transform:uppercase"
+              oninput="this.value = this.value.toUpperCase()">
           </div>
           <div class="table-label">Select Items</div>
           <div class="item-table">
