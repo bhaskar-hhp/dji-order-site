@@ -154,6 +154,8 @@
     .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
     .filter-btn:not(.active):hover { color: var(--text); border-color: var(--text); }
 
+    .partner-filter { padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 2rem; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; cursor: pointer; }
+
     .status-badge {
       display: inline-block; padding: 0.15rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;
     }
@@ -238,6 +240,7 @@
           <button class="filter-btn active" data-filter="All">All</button>
           <button class="filter-btn" data-filter="New">New</button>
           <button class="filter-btn" data-filter="Complete">Complete</button>
+          <select id="partnerFilter" class="partner-filter"><option value="">All Partners</option></select>
         </div>
 
         <div class="orders-table-wrap">
@@ -378,6 +381,7 @@
     // ── Load Orders (Status Tab) ──
     let allOrders = [];
     let currentFilter = 'All';
+    let currentPartner = '';
 
     function parseDate(v) {
       if (!v) return '';
@@ -391,6 +395,12 @@
     function formatDate(d) {
       if (!d || isNaN(d)) return '';
       return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function populatePartnerFilter() {
+      const sel = document.getElementById('partnerFilter');
+      const partners = [...new Set(allOrders.map(o => o.partner).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">All Partners</option>' + partners.map(p => `<option value="${p}">${p}</option>`).join('');
     }
 
     async function loadOrders() {
@@ -409,6 +419,7 @@
           status: r.c[4]?.v || 'New'
         }));
         renderOrders();
+        populatePartnerFilter();
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="6" class="no-orders">Failed to load orders.</td></tr>';
       }
@@ -416,7 +427,11 @@
 
     function renderOrders() {
       const tbody = document.getElementById('ordersBody');
-      const filtered = currentFilter === 'All' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+      const filtered = allOrders.filter(o => {
+        if (currentFilter !== 'All' && o.status !== currentFilter) return false;
+        if (currentPartner && o.partner !== currentPartner) return false;
+        return true;
+      });
       if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="no-orders">No orders found.</td></tr>';
         return;
@@ -439,6 +454,11 @@
         currentFilter = btn.dataset.filter;
         renderOrders();
       });
+    });
+
+    document.getElementById('partnerFilter').addEventListener('change', function() {
+      currentPartner = this.value;
+      renderOrders();
     });
   </script>
 </body>
