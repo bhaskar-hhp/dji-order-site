@@ -191,6 +191,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="order">Order</button>
       <button class="tab-btn" data-tab="status">Status</button>
+      <button class="tab-btn" data-tab="price">Price</button>
     </div>
 
     <!-- Order Tab -->
@@ -261,12 +262,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Price Tab -->
+    <div id="tab-price" class="tab-panel">
+      <div class="card">
+        <h1>Price List</h1>
+        <p class="subtitle">Product pricing information</p>
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead id="priceHead">
+              <tr></tr>
+            </thead>
+            <tbody id="priceBody">
+              <tr><td colspan="4" class="no-orders">Loading prices...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
     // ── Fetch Models from Sheet ──
     const MODELS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=model';
     const ORDERS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Order';
+    const PRICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Price';
     const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxFTbJ6MZXFiV1d3HoUj6a-zPeZ8S9NeXsbep3HM5-68CVQhnWPxrZEDtzj2Dh8sn9IuQ/exec';
 
     async function loadModels() {
@@ -303,6 +323,7 @@
         btn.classList.add('active');
         document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
         if (btn.dataset.tab === 'status') loadOrders();
+        if (btn.dataset.tab === 'price') loadPrices();
       });
     });
 
@@ -363,6 +384,10 @@
         });
         msg.className = 'msg success';
         msg.textContent = 'Order submitted successfully!';
+        const name = document.getElementById('name').value.trim();
+        const itemLines = items.map(i => `  • ${i.model} × ${i.quantity}`).join('\n');
+        const waMsg = `New Order\n\nPartner: ${name}\nItems:\n${itemLines}`;
+        window.open(`https://wa.me/917005205093?text=${encodeURIComponent(waMsg)}`, '_blank');
         form.reset();
         const firstRow = itemTable.querySelector('.table-row');
         const extraRows = itemTable.querySelectorAll('.table-row');
@@ -377,6 +402,30 @@
         setTimeout(() => { msg.style.display = 'none'; }, 4000);
       }
     });
+
+    // ── Load Price Tab ──
+    async function loadPrices() {
+      const thead = document.getElementById('priceHead').querySelector('tr');
+      const tbody = document.getElementById('priceBody');
+      tbody.innerHTML = '<tr><td colspan="4" class="no-orders">Loading prices...</td></tr>';
+      try {
+        const res = await fetch(PRICE_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.replace(/^\/\*O_o\*\/\s*/, '').replace(/google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, ''));
+        const rows = json.table.rows;
+        if (rows.length < 2) {
+          tbody.innerHTML = '<tr><td colspan="4" class="no-orders">No price data found.</td></tr>';
+          return;
+        }
+        const headers = rows[0].c.map(c => c?.v || '');
+        thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+        tbody.innerHTML = rows.slice(1).map(r => `
+          <tr>${r.c.map(c => `<td>${c?.v ?? ''}</td>`).join('')}</tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-orders">Failed to load prices.</td></tr>';
+      }
+    }
 
     // ── Load Orders (Status Tab) ──
     let allOrders = [];
