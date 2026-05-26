@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill - DJI Sales</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success-bg: #064e3b;
+      --success-text: #6ee7b7;
+      --error-bg: #7f1d1d;
+      --error-text: #fca5a5;
+      --loading-bg: #1e3a5f;
+      --loading-text: #93c5fd;
+    }
+    .light {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success-bg: #dcfce7;
+      --success-text: #166534;
+      --error-bg: #fee2e2;
+      --error-text: #991b1b;
+      --loading-bg: #eff6ff;
+      --loading-text: #1e40af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    input, button, textarea, select { font: inherit; }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 1rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .logo { color: var(--primary); font-weight: 700; font-size: 1.25rem; }
+
+    #themeBtn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1.125rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      padding: 0;
+    }
+    #themeBtn:hover { background: var(--border); }
+
+    .tabs { display: flex; gap: 0.25rem; }
+    .tab-btn {
+      padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem 0.5rem 0 0; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border-bottom: none;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--surface); }
+    .tab-btn.active { background: var(--surface); color: var(--primary); border-color: var(--border); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .ps-wrap { display: flex; flex-direction: column; gap: 1.5rem; }
+    .ps-section h3 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--text); }
+    .ps-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .ps-table th { text-align: left; padding: 0.5rem; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .ps-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .ps-table .cell-input { width: 100%; min-width: 60px; padding: 0.25rem 0.4rem; border: 1px solid var(--border); border-radius: 0.25rem; background: var(--bg); color: var(--text); font-size: 0.82rem; outline: none; transition: border-color 0.2s; }
+    .ps-table .cell-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    .ps-table .model-cell { font-weight: 600; white-space: nowrap; }
+
+    .card { background: var(--surface); border-radius: 1rem; box-shadow: 0 4px 24px rgba(0,0,0,0.4); padding: 1.5rem; transition: background 0.3s, box-shadow 0.3s; }
+    .light .card { box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+
+    .card h1 { font-size: 1.25rem; margin-bottom: 0.25rem; color: var(--text); }
+    .card .subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+    .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 2rem; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .filter-btn:not(.active):hover { color: var(--text); border-color: var(--text); }
+
+    .partner-filter { padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 2rem; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; cursor: pointer; }
+    .date-filter { padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 2rem; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; }
+    .clear-date-btn {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .clear-date-btn:hover { color: var(--text); border-color: var(--text); }
+
+    .status-badge {
+      display: inline-block; padding: 0.15rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;
+    }
+    .status-New { background: #1e3a5f; color: #93c5fd; }
+    .light .status-New { background: #dbeafe; color: #1e40af; }
+    .status-Complete { background: #064e3b; color: #6ee7b7; }
+    .light .status-Complete { background: #dcfce7; color: #166534; }
+    .status-In-Transit { background: #7c2d12; color: #fcd34d; }
+    .light .status-In-Transit { background: #fef3c7; color: #92400e; }
+
+    .orders-table-wrap { overflow-x: auto; }
+    .orders-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .orders-table th { text-align: left; padding: 0.6rem 0.5rem; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .orders-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .orders-table tr:last-child td { border-bottom: none; }
+    .no-orders { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.9rem; }
+
+    .qty-input {
+      width: 80px; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 0.3rem; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; transition: border-color 0.2s;
+    }
+    .qty-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+
+    .status-update-btn { background: none; border: 1px solid var(--border); border-radius: 0.3rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer; color: var(--text); transition: background 0.2s; white-space: nowrap; }
+    .status-update-btn:hover { background: var(--border); }
+    .stock-low { color: #ef4444; font-weight: 700; }
+
+    .delete-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; padding: 0.2rem 0.4rem; transition: opacity 0.2s; }
+    .delete-btn:hover { opacity: 0.7; }
+
+    .save-btn {
+      background: var(--primary); border: none; border-radius: 0.3rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer; color: white; transition: background 0.2s; white-space: nowrap;
+    }
+    .save-btn:hover { background: var(--primary-hover); }
+
+    .msg { margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; display: none; text-align: center; }
+    .msg.success { display: block; background: var(--success-bg); color: var(--success-text); }
+    .msg.error { display: block; background: var(--error-bg); color: var(--error-text); }
+    .msg.loading { display: block; background: var(--loading-bg); color: var(--loading-text); }
+    .msg.info { display: block; background: var(--loading-bg); color: var(--loading-text); }
+
+    .sub-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--border); }
+    .sub-tab-btn {
+      padding: 0.4rem 1rem; border: none; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+    }
+    .sub-tab-btn:hover { color: var(--text); }
+    .sub-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .subtab-content { display: none; }
+    .subtab-content.active { display: block; }
+
+    .checkbox-cell { width: 36px; text-align: center; }
+    .checkbox-cell input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--surface); border-radius: 1rem; padding: 1.5rem; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: background 0.3s;
+    }
+    .modal-box h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--text); }
+    .modal-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .modal-table th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+    .modal-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .modal-table .mqty { width: 70px; padding: 0.25rem 0.4rem; border: 1px solid var(--border); border-radius: 0.25rem; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; }
+    .modal-table .mqty:focus { border-color: var(--primary); }
+    .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+    .modal-actions .cancel-btn { padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 0.3rem; background: transparent; color: var(--muted); cursor: pointer; font-size: 0.85rem; }
+    .modal-actions .cancel-btn:hover { color: var(--text); border-color: var(--text); }
+
+    @media (max-width: 600px) {
+      body { padding: 0.5rem; }
+      .container { margin-top: 0.5rem; }
+      .card { padding: 1rem; border-radius: 0.75rem; }
+      .orders-table { font-size: 0.8rem; }
+      .qty-input { width: 60px; }
+    }
+  </style>
+</head>
+<body class="light">
+
+  <div class="container">
+    <div class="header">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="bill">Bill</button>
+        <button class="tab-btn" data-tab="price-stock">Price & Stock</button>
+        <button class="tab-btn" data-tab="primary">Primary</button>
+      </div>
+      <button id="themeBtn" title="Toggle theme">🌙</button>
+    </div>
+
+    <div id="tab-bill" class="tab-content active">
+      <div class="card">
+        <h1>Order Status</h1>
+        <p class="subtitle">View, edit quantities, and mark orders complete</p>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">Total Qty: <strong id="totalQty">0</strong></p>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="All">All</button>
+          <button class="filter-btn" data-filter="New">New</button>
+          <button class="filter-btn" data-filter="Complete">Complete</button>
+          <select id="partnerFilter" class="partner-filter"><option value="">All Partners</option></select>
+          <input type="date" id="dateFilter" class="date-filter" title="Filter by date">
+          <button id="clearDateBtn" class="clear-date-btn" type="button">Clear Date</button>
+          <button class="save-btn" id="bulkCompleteBtn" style="display:none;">Complete</button>
+        </div>
+
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th class="checkbox-cell" id="billCheckTh" style="display:none;"><input type="checkbox" id="billSelectAll"></th>
+                <th>Date</th>
+                <th>Partner</th>
+                <th>Model</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Qty</th>
+                <th>Status</th>
+                <th>Last Update</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr><td colspan="10" class="no-orders">Loading orders...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-price-stock" class="tab-content">
+      <div class="card">
+        <h1>Price & Stock</h1>
+        <p class="subtitle">Edit model prices, stock shown for reference</p>
+        <div style="overflow-x:auto;">
+          <table class="ps-table" id="priceTable">
+            <thead id="priceThead"></thead>
+            <tbody id="priceTbody"><tr><td class="no-orders">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <button class="save-btn" id="savePriceBtn" style="margin-top:0.5rem;">Save Prices</button>
+      </div>
+    </div>
+
+    <div id="tab-primary" class="tab-content">
+      <div class="card">
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" data-subtab="primary-order">Primary Order</button>
+          <button class="sub-tab-btn" data-subtab="primary-intransit">Primary In-transit</button>
+        </div>
+
+        <div id="subtab-primary-order" class="subtab-content active">
+          <p class="subtitle">New orders & zero-stock items — select to place order</p>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell"><input type="checkbox" id="poSelectAll"></th>
+                  <th>Date</th>
+                  <th>Partner</th>
+                  <th>Model</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Qty</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="poBody"><tr><td colspan="8" class="no-orders">Loading...</td></tr></tbody>
+            </table>
+          </div>
+          <button class="save-btn" id="orderBtn" style="margin-top:0.5rem;">Order</button>
+        </div>
+
+        <div id="subtab-primary-intransit" class="subtab-content">
+          <p class="subtitle">In-transit items — select to mark as received</p>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell"><input type="checkbox" id="piSelectAll"></th>
+                  <th>Date</th>
+                  <th>Partner</th>
+                  <th>Model</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Qty</th>
+                  <th>Status</th>
+                  <th>Last Update</th>
+                </tr>
+              </thead>
+              <tbody id="piBody"><tr><td colspan="9" class="no-orders">Loading...</td></tr></tbody>
+            </table>
+          </div>
+          <button class="save-btn" id="receivedBtn" style="margin-top:0.5rem;">Received</button>
+          <button class="save-btn" id="autoUpdateBtn" style="margin-top:0.5rem;margin-left:0.5rem;background:var(--primary-hover);">Auto Update</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="orderModal" class="modal-overlay">
+      <div class="modal-box">
+        <h2>Confirm Order</h2>
+        <table class="modal-table">
+          <thead><tr><th>Model</th><th>Qty</th></tr></thead>
+          <tbody id="modalBody"></tbody>
+        </table>
+        <div class="modal-actions">
+          <button class="cancel-btn" id="modalCancel">Cancel</button>
+          <button class="save-btn" id="modalSubmit">Submit Order</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+      <div class="modal-box">
+        <h2>Order Summary</h2>
+        <table class="modal-table">
+          <thead><tr><th>Model</th><th>Total Qty</th></tr></thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+        <div class="modal-actions">
+          <button class="save-btn" id="resultClose">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <script>
+    const ORDERS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Order';
+    const PRICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Price';
+    const STOCK_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Stock';
+    const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxFTbJ6MZXFiV1d3HoUj6a-zPeZ8S9NeXsbep3HM5-68CVQhnWPxrZEDtzj2Dh8sn9IuQ/exec';
+
+    let allOrders = [];
+    let dpPriceByModel = {};
+    let stockByModel = {};
+    let priceCols = [];
+    let priceRows = [];
+    let currentFilter = 'All';
+    let currentPartner = '';
+    let currentDate = '';
+
+    function parseDate(v) {
+      if (!v) return '';
+      if (typeof v === 'string' && v.startsWith('Date(')) {
+        const m = v.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)/);
+        if (m) return new Date(+m[1], +m[2], +m[3], +m[4], +m[5], +m[6]);
+      }
+      return new Date(v);
+    }
+
+    function formatDate(d) {
+      if (!d || isNaN(d)) return '';
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function parseGvizJson(text) {
+      return JSON.parse(
+        text
+          .replace(/^\/\*O_o\*\/\s*/, '')
+          .replace(/google\.visualization\.Query\.setResponse\(/, '')
+          .replace(/\);$/, '')
+      );
+    }
+
+    function populatePartnerFilter() {
+      const sel = document.getElementById('partnerFilter');
+      const partners = [...new Set(allOrders.map(o => o.partner).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">All Partners</option>' + partners.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
+    function showMsg(text, type) {
+      const msg = document.getElementById('msg');
+      msg.className = 'msg ' + type;
+      msg.textContent = text;
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    }
+
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersBody');
+      tbody.innerHTML = '<tr><td colspan="10" class="no-orders">Loading orders...</td></tr>';
+      try {
+        const [ordersRes, pricesRes, stockRes] = await Promise.all([fetch(ORDERS_URL), fetch(PRICE_URL), fetch(STOCK_URL)]);
+        const [ordersText, pricesText, stockText] = await Promise.all([ordersRes.text(), pricesRes.text(), stockRes.text()]);
+        const json = parseGvizJson(ordersText);
+        const priceJson = parseGvizJson(pricesText);
+        const stockJson = parseGvizJson(stockText);
+        dpPriceByModel = {};
+        (priceJson.table?.rows || []).forEach((r) => {
+          const model = (r.c?.[0]?.v || '').toString().trim();
+          const dp = r.c?.[3]?.v;
+          if (model) dpPriceByModel[model] = dp ?? '';
+        });
+        stockByModel = {};
+        (stockJson.table?.rows || []).forEach((r) => {
+          const model = (r.c?.[0]?.v || '').toString().trim();
+          const stock = r.c?.[1]?.v;
+          if (model) stockByModel[model] = stock ?? '';
+        });
+        priceCols = (priceJson.table?.cols || []).map(c => c.label || '');
+        priceRows = (priceJson.table?.rows || []).map((r, idx) => ({
+          rowIndex: idx + 2,
+          cells: (r.c || []).map(c => c?.v ?? '')
+        }));
+        allOrders = json.table.rows.map((r, idx) => ({
+          rowIndex: idx + 2,
+          date: parseDate(r.c[0]?.v),
+          partner: r.c[1]?.v || '',
+          model: r.c[2]?.v || '',
+          qty: r.c[3]?.v || '',
+          status: r.c[4]?.v || 'New',
+          lastUpdate: parseDate(r.c[5]?.v),
+          price: dpPriceByModel[(r.c[2]?.v || '').toString().trim()] ?? '',
+          stock: stockByModel[(r.c[2]?.v || '').toString().trim()] ?? 0
+        }));
+        allOrders.sort((a, b) => {
+          const ta = a.date instanceof Date ? a.date.getTime() : NaN;
+          const tb = b.date instanceof Date ? b.date.getTime() : NaN;
+          if (isNaN(tb) && isNaN(ta)) return 0;
+          if (isNaN(tb)) return -1;
+          if (isNaN(ta)) return 1;
+          return tb - ta;
+        });
+        allOrders.forEach((o, i) => { o.idx = i; });
+        renderOrders();
+        renderPriceStock();
+        renderPrimary();
+        populatePartnerFilter();
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-orders">Failed to load orders.</td></tr>';
+        showMsg('Failed to load orders.', 'error');
+      }
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById('ordersBody');
+      const isNewFilter = currentFilter === 'New';
+      document.getElementById('billCheckTh').style.display = isNewFilter ? '' : 'none';
+      document.getElementById('bulkCompleteBtn').style.display = isNewFilter ? '' : 'none';
+
+      const filtered = allOrders.filter(o => {
+        if (currentFilter !== 'All' && o.status !== currentFilter) return false;
+        if (currentPartner && o.partner !== currentPartner) return false;
+        if (currentDate) {
+          if (!(o.date instanceof Date) || Number.isNaN(o.date.getTime())) return false;
+          const y = o.date.getFullYear();
+          const m = String(o.date.getMonth() + 1).padStart(2, '0');
+          const d = String(o.date.getDate()).padStart(2, '0');
+          const orderDate = `${y}-${m}-${d}`;
+          if (orderDate !== currentDate) return false;
+        }
+        return true;
+      });
+      const totalQty = filtered.reduce((sum, o) => sum + (parseInt(o.qty, 10) || 0), 0);
+      document.getElementById('totalQty').textContent = totalQty;
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-orders">No orders found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(o => `
+        <tr>
+          ${isNewFilter ? `<td class="checkbox-cell"><input type="checkbox" class="bill-check" data-idx="${o.idx}"></td>` : ''}
+          <td>${formatDate(o.date)}</td>
+          <td>${o.partner}</td>
+          <td>${o.model}</td>
+          <td>${o.price}</td>
+          <td class="${Number(o.stock) < 3 ? 'stock-low' : ''}">${o.stock}</td>
+          <td><input type="number" class="qty-input" value="${o.qty}" min="1" data-idx="${o.idx}"></td>
+          <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+          <td>${o.status === 'Complete' && o.lastUpdate instanceof Date && !isNaN(o.lastUpdate) ? formatDate(o.lastUpdate) : '-'}</td>
+          <td>
+            ${o.status === 'New' ? `<button class="status-update-btn" data-idx="${o.idx}">Mark Complete</button>` : ''}
+            <button class="delete-btn" data-idx="${o.idx}" title="Delete">🗑</button>
+          </td>
+        </tr>
+      `).join('');
+
+      if (isNewFilter) {
+        document.getElementById('billSelectAll').onchange = function() {
+          document.querySelectorAll('.bill-check').forEach(c => c.checked = this.checked);
+        };
+      }
+
+      document.querySelectorAll('.status-update-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = parseInt(btn.dataset.idx);
+          const order = allOrders[idx];
+          const qtyInput = document.querySelector(`.qty-input[data-idx="${idx}"]`);
+          const originalQty = parseInt(order.qty, 10);
+          const newQty = parseInt(qtyInput ? qtyInput.value : order.qty, 10);
+          if (!Number.isFinite(newQty) || newQty <= 0) {
+            showMsg('Please enter a valid quantity.', 'error');
+            return;
+          }
+          if (Number.isFinite(originalQty) && newQty > originalQty) {
+            showMsg('Completed quantity cannot be greater than order quantity.', 'error');
+            return;
+          }
+          btn.disabled = true;
+          try {
+            await fetch(UPDATE_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'updateStatus', index: order.rowIndex, status: 'Complete', qty: newQty, lastUpdate: new Date().toISOString() })
+            });
+
+            await fetch(UPDATE_URL, {
+              method: 'POST', mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'deductStock', model: order.model, qty: newQty })
+            });
+            stockByModel[order.model] = Math.max(0, (parseInt(stockByModel[order.model], 10) || 0) - newQty);
+
+            const shouldCreateRemaining = Number.isFinite(originalQty) && newQty < originalQty;
+            if (shouldCreateRemaining) {
+              const remainingQty = originalQty - newQty;
+              await fetch(UPDATE_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: order.partner,
+                  items: [{ model: order.model, quantity: remainingQty }]
+                })
+              });
+            }
+
+            order.qty = newQty;
+            order.status = 'Complete';
+            order.lastUpdate = new Date();
+            renderOrders();
+            showMsg('Order marked complete.', 'success');
+          } catch (e) {
+            showMsg('Failed to update order.', 'error');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = parseInt(btn.dataset.idx);
+          if (!confirm('Delete this order?')) return;
+          try {
+            await fetch(UPDATE_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'deleteRow', index: allOrders[idx].rowIndex })
+            });
+            allOrders.splice(idx, 1);
+            allOrders.forEach((o, i) => { o.idx = i; });
+            renderOrders();
+            showMsg('Order deleted.', 'success');
+          } catch (e) {
+            showMsg('Failed to delete order.', 'error');
+          }
+        });
+      });
+    }
+
+    document.getElementById('bulkCompleteBtn').addEventListener('click', async () => {
+      const checked = Array.from(document.querySelectorAll('.bill-check:checked')).map(c => parseInt(c.dataset.idx));
+      if (checked.length === 0) { showMsg('Select at least one item.', 'error'); return; }
+      const btn = document.getElementById('bulkCompleteBtn');
+      btn.disabled = true; btn.textContent = 'Completing...';
+      let success = true;
+      for (const idx of checked) {
+        const order = allOrders[idx];
+        if (!order || order.status !== 'New') continue;
+        const qtyInput = document.querySelector(`.qty-input[data-idx="${idx}"]`);
+        const newQty = parseInt(qtyInput ? qtyInput.value : order.qty, 10);
+        if (!Number.isFinite(newQty) || newQty <= 0) continue;
+        const originalQty = parseInt(order.qty, 10);
+        if (Number.isFinite(originalQty) && newQty > originalQty) continue;
+        try {
+          await fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateStatus', index: order.rowIndex, status: 'Complete', qty: newQty, lastUpdate: new Date().toISOString() })
+          });
+          await fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'deductStock', model: order.model, qty: newQty })
+          });
+          stockByModel[order.model] = Math.max(0, (parseInt(stockByModel[order.model], 10) || 0) - newQty);
+          const shouldCreateRemaining = Number.isFinite(originalQty) && newQty < originalQty;
+          if (shouldCreateRemaining) {
+            await fetch(UPDATE_URL, {
+              method: 'POST', mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: order.partner, items: [{ model: order.model, quantity: originalQty - newQty }] })
+            });
+          }
+          order.qty = newQty;
+          order.status = 'Complete';
+          order.lastUpdate = new Date();
+        } catch (e) { success = false; }
+      }
+      btn.disabled = false; btn.textContent = 'Complete';
+      renderOrders();
+      showMsg(success ? 'Orders marked complete.' : 'Some orders failed.', success ? 'success' : 'error');
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderOrders();
+      });
+    });
+
+    document.getElementById('partnerFilter').addEventListener('change', function() {
+      currentPartner = this.value;
+      renderOrders();
+    });
+
+    document.getElementById('dateFilter').addEventListener('change', function() {
+      currentDate = this.value;
+      renderOrders();
+    });
+
+    document.getElementById('clearDateBtn').addEventListener('click', function() {
+      currentDate = '';
+      document.getElementById('dateFilter').value = '';
+      renderOrders();
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function renderPriceStock() {
+      const priceThead = document.getElementById('priceThead');
+      const priceTbody = document.getElementById('priceTbody');
+
+      priceThead.innerHTML = '<tr><th>Model</th>' + priceCols.slice(1).map(c => `<th>${c}</th>`).join('') + '<th>Stock</th></tr>';
+
+      if (priceRows.length) {
+        priceTbody.innerHTML = priceRows.map((r, ri) => {
+          const model = r.cells[0] || '';
+          const stock = stockByModel[model] ?? '';
+          return '<tr>' + r.cells.map((v, ci) =>
+            `<td>${ci === 0 ? `<span class="model-cell">${v}</span>` : `<input class="cell-input" data-row="${ri}" data-col="${ci}" value="${v}">`}</td>`
+          ).join('') + `<td>${stock}</td></tr>`;
+        }).join('');
+      } else {
+        priceTbody.innerHTML = '<tr><td colspan="99" class="no-orders">No data.</td></tr>';
+      }
+
+      document.querySelectorAll('#priceTable .cell-input').forEach(inp => {
+        inp.addEventListener('change', function() {
+          const row = parseInt(this.dataset.row);
+          const col = parseInt(this.dataset.col);
+          if (priceRows[row]) priceRows[row].cells[col] = this.value;
+        });
+      });
+    }
+
+    document.getElementById('savePriceBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('savePriceBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        for (const r of priceRows) {
+          await fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updatePrice', index: r.rowIndex, values: r.cells })
+          });
+        }
+        showMsg('Prices saved.', 'success');
+      } catch (e) {
+        showMsg('Failed to save prices.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Prices';
+      }
+    });
+
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.subtab-content').forEach(sc => sc.classList.remove('active'));
+        document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+      });
+    });
+
+    function renderPrimaryOrder() {
+      const tbody = document.getElementById('poBody');
+      const newOrders = allOrders.filter(o => o.status === 'New').map(o => ({ ...o, isZeroStock: false }));
+      const zeroModels = Object.entries(stockByModel)
+        .filter(([, stock]) => stock === 0 || stock === '' || stock === null || stock === undefined)
+        .map(([model]) => model);
+      const existingModels = new Set(newOrders.map(o => o.model));
+      const zeroRows = zeroModels.filter(m => !existingModels.has(m)).map(m => ({
+        isZeroStock: true,
+        model: m,
+        partner: '',
+        qty: '',
+        price: dpPriceByModel[m] ?? '',
+        stock: 0,
+        status: 'New',
+        date: null,
+        lastUpdate: null,
+        rowIndex: null,
+        idx: null
+      }));
+      const rows = [...newOrders, ...zeroRows];
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-orders">No items to order.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map((o, ri) => {
+        const id = `po-${ri}`;
+        return `<tr${o.isZeroStock ? ' style="opacity:0.7;"' : ''}>
+          <td class="checkbox-cell"><input type="checkbox" class="po-check" data-id="${id}" data-iszero="${o.isZeroStock}" data-rowidx="${o.rowIndex ?? ''}"></td>
+          <td>${o.date instanceof Date && !isNaN(o.date) ? formatDate(o.date) : '—'}</td>
+          <td>${o.partner || '—'}</td>
+          <td><span class="model-cell">${o.model}</span></td>
+          <td>${o.price}</td>
+          <td class="${Number(o.stock) < 3 ? 'stock-low' : ''}">${o.stock}</td>
+          <td>${o.qty || '—'}</td>
+          <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('poSelectAll').onchange = function() {
+        document.querySelectorAll('.po-check').forEach(c => c.checked = this.checked);
+      };
+    }
+
+    function renderPrimaryIntransit() {
+      const tbody = document.getElementById('piBody');
+      const items = allOrders.filter(o => o.status === 'In-Transit');
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="no-orders">No in-transit items.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map(o => `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="pi-check" data-idx="${o.idx}"></td>
+          <td>${formatDate(o.date)}</td>
+          <td>${o.partner}</td>
+          <td><span class="model-cell">${o.model}</span></td>
+          <td>${o.price}</td>
+          <td class="${Number(o.stock) < 3 ? 'stock-low' : ''}">${o.stock}</td>
+          <td>${o.qty}</td>
+          <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+          <td>${o.lastUpdate instanceof Date && !isNaN(o.lastUpdate) ? formatDate(o.lastUpdate) : '-'}</td>
+        </tr>
+      `).join('');
+      document.getElementById('piSelectAll').onchange = function() {
+        document.querySelectorAll('.pi-check').forEach(c => c.checked = this.checked);
+      };
+    }
+
+    function renderPrimary() {
+      renderPrimaryOrder();
+      renderPrimaryIntransit();
+    }
+
+    document.getElementById('orderBtn').addEventListener('click', () => {
+      const checked = Array.from(document.querySelectorAll('.po-check:checked')).map(c => ({
+        model: c.closest('tr').querySelector('.model-cell').textContent,
+        isZero: c.dataset.iszero === 'true',
+        rowIdx: parseInt(c.dataset.rowidx)
+      }));
+      if (checked.length === 0) { showMsg('Select at least one item.', 'error'); return; }
+      const grouped = {};
+      checked.forEach(({ model, isZero, rowIdx }) => {
+        if (!grouped[model]) grouped[model] = { model, isZero, totalQty: 0 };
+        if (!isZero) grouped[model].isZero = false;
+        const order = allOrders.find(o => o.rowIndex === rowIdx);
+        const qty = order ? parseInt(order.qty, 10) || 0 : 1;
+        grouped[model].totalQty += qty;
+      });
+      const modalBody = document.getElementById('modalBody');
+      modalBody.innerHTML = Object.values(grouped).map(({ model, isZero, totalQty }) =>
+        `<tr>
+          <td><span class="model-cell">${model}</span></td>
+          <td><input type="number" class="mqty" data-model="${model}" data-iszero="${isZero}" value="${totalQty || 1}" min="1"></td>
+        </tr>`
+      ).join('');
+      document.getElementById('orderModal').classList.add('active');
+    });
+
+    document.getElementById('modalCancel').addEventListener('click', () => {
+      document.getElementById('orderModal').classList.remove('active');
+    });
+
+    document.getElementById('resultClose').addEventListener('click', () => {
+      document.getElementById('resultModal').classList.remove('active');
+    });
+
+    document.getElementById('modalSubmit').addEventListener('click', async () => {
+      const rows = Array.from(document.querySelectorAll('#modalBody tr')).map(tr => {
+        const inp = tr.querySelector('.mqty');
+        return {
+          model: inp.dataset.model,
+          isZero: inp.dataset.iszero === 'true',
+          qty: Math.max(1, parseInt(inp.value, 10) || 1)
+        };
+      });
+      const btn = document.getElementById('modalSubmit');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+      try {
+        await Promise.all(rows.map(r => {
+          const order = allOrders.find(o => o.model === r.model && o.status === 'New');
+          if (order) {
+            return fetch(UPDATE_URL, {
+              method: 'POST', mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'updateStatus', index: order.rowIndex, status: 'In-Transit', qty: r.qty, lastUpdate: new Date().toISOString() })
+            });
+          }
+          return fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'createPrimaryOrder', model: r.model, qty: r.qty })
+          });
+        }));
+        document.getElementById('orderModal').classList.remove('active');
+        const grouped = {};
+        rows.forEach(r => { grouped[r.model] = (grouped[r.model] || 0) + r.qty; });
+        document.getElementById('resultBody').innerHTML = Object.entries(grouped).map(([model, qty]) =>
+          `<tr><td><span class="model-cell">${model}</span></td><td>${qty}</td></tr>`
+        ).join('');
+        document.getElementById('resultModal').classList.add('active');
+        loadOrders();
+      } catch (e) {
+        showMsg('Failed to place order.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Submit Order';
+      }
+    });
+
+    document.getElementById('receivedBtn').addEventListener('click', async () => {
+      const checked = Array.from(document.querySelectorAll('.pi-check:checked')).map(c => parseInt(c.dataset.idx));
+      if (checked.length === 0) { showMsg('Select at least one item.', 'error'); return; }
+      const btn = document.getElementById('receivedBtn');
+      btn.disabled = true; btn.textContent = 'Updating...';
+      try {
+        await Promise.all(checked.map(idx =>
+          fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateStatus', index: allOrders[idx].rowIndex, status: 'New', qty: allOrders[idx].qty, lastUpdate: new Date().toISOString() })
+          })
+        ));
+        checked.forEach(idx => { allOrders[idx].status = 'New'; allOrders[idx].lastUpdate = new Date(); });
+        showMsg('Items marked as received.', 'success');
+        renderOrders();
+        renderPrimaryIntransit();
+      } catch (e) {
+        showMsg('Failed to update.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Received';
+      }
+    });
+
+    document.getElementById('autoUpdateBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('autoUpdateBtn');
+      btn.disabled = true; btn.textContent = 'Processing...';
+      let updated = 0;
+      try {
+        const inTransit = allOrders.filter(o => o.status === 'In-Transit').sort((a, b) => {
+          const ta = a.date instanceof Date ? a.date.getTime() : 0;
+          const tb = b.date instanceof Date ? b.date.getTime() : 0;
+          return ta - tb;
+        });
+        const stockCopy = { ...stockByModel };
+        const requests = [];
+        for (const order of inTransit) {
+          const available = parseInt(stockCopy[order.model], 10) || 0;
+          if (available <= 0) continue;
+          const allocate = Math.min(available, parseInt(order.qty, 10) || 1);
+          requests.push(
+            fetch(UPDATE_URL, {
+              method: 'POST', mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'updateStatus', index: order.rowIndex, status: 'New', qty: allocate, lastUpdate: new Date().toISOString() })
+            })
+          );
+          stockCopy[order.model] = available - allocate;
+          order.status = 'New';
+          order.qty = allocate;
+          order.lastUpdate = new Date();
+          stockByModel[order.model] = stockCopy[order.model];
+          updated++;
+        }
+        if (updated === 0) { showMsg('No in-transit items with available stock.', 'info'); return; }
+        await Promise.all(requests);
+        showMsg(`Auto-updated ${updated} item(s).`, 'success');
+        renderOrders();
+        renderPrimaryIntransit();
+      } catch (e) {
+        showMsg('Auto update failed.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Auto Update';
+      }
+    });
+
+    const body = document.body;
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      body.classList.toggle('light');
+      themeBtn.textContent = body.classList.contains('light') ? '🌙' : '☀️';
+    });
+
+    loadOrders();
+  </script>
+</body>
+</html>
