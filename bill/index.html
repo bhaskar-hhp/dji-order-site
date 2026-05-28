@@ -275,6 +275,7 @@
         <div class="sub-tabs">
           <button class="sub-tab-btn active" data-subtab="primary-order">Primary Order</button>
           <button class="sub-tab-btn" data-subtab="primary-intransit">Primary In-transit</button>
+          <button class="sub-tab-btn" data-subtab="invoice-tracker">Invoice Tracker</button>
         </div>
 
         <div id="subtab-primary-order" class="subtab-content active">
@@ -322,6 +323,21 @@
           <button class="save-btn" id="receivedBtn" style="margin-top:0.5rem;">Received</button>
           <button class="save-btn" id="autoUpdateBtn" style="margin-top:0.5rem;margin-left:0.5rem;background:var(--primary-hover);">Auto Update</button>
         </div>
+
+        <div id="subtab-invoice-tracker" class="subtab-content">
+          <p class="subtitle">Invoice tracking records</p>
+          <button class="save-btn" id="addInvoiceBtn" style="margin-bottom:0.5rem;">+ Add Invoice</button>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead id="invoiceHead">
+                <tr></tr>
+              </thead>
+              <tbody id="invoiceBody">
+                <tr><td colspan="10" class="no-orders">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -352,6 +368,42 @@
       </div>
     </div>
 
+    <div id="invEditModal" class="modal-overlay">
+      <div class="modal-box" style="max-width:500px;">
+        <h2>Edit Invoice Item</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+          <input type="text" id="editInvInvoice" placeholder="Invoice No" style="padding:0.4rem 0.5rem;border:1px solid var(--border);border-radius:0.3rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;">
+          <input type="text" id="editInvModel" placeholder="Model" style="padding:0.4rem 0.5rem;border:1px solid var(--border);border-radius:0.3rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <input type="number" id="editInvQty" min="1" style="width:100%;padding:0.4rem 0.5rem;border:1px solid var(--border);border-radius:0.3rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;box-sizing:border-box;" placeholder="Qty">
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" id="invEditCancel">Cancel</button>
+          <button class="save-btn" id="invEditSubmit">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="invoiceModal" class="modal-overlay">
+      <div class="modal-box" style="max-width:650px;">
+        <h2>Add Invoice</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+          <input type="text" id="invNumber" placeholder="Invoice No" style="padding:0.4rem 0.5rem;border:1px solid var(--border);border-radius:0.3rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;">
+          <input type="date" id="invDate" style="padding:0.4rem 0.5rem;border:1px solid var(--border);border-radius:0.3rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;">
+        </div>
+        <table class="modal-table" id="invItemsTable">
+          <thead><tr><th>Model</th><th>Qty</th><th></th></tr></thead>
+          <tbody id="invItemsBody"></tbody>
+        </table>
+        <button class="save-btn" id="addInvItemBtn" style="margin-top:0.5rem;font-size:0.85rem;">+ Add Item</button>
+        <div class="modal-actions">
+          <button class="cancel-btn" id="invModalCancel">Cancel</button>
+          <button class="save-btn" id="invModalSubmit">Save Invoice</button>
+        </div>
+      </div>
+    </div>
+
     <div id="msg" class="msg"></div>
   </div>
 
@@ -360,6 +412,7 @@
     const PRICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Price';
     const STOCK_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Stock';
     const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxFTbJ6MZXFiV1d3HoUj6a-zPeZ8S9NeXsbep3HM5-68CVQhnWPxrZEDtzj2Dh8sn9IuQ/exec';
+    const INVOICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=invoice-tracker';
 
     let allOrders = [];
     let dpPriceByModel = {};
@@ -373,8 +426,8 @@
     function parseDate(v) {
       if (!v) return '';
       if (typeof v === 'string' && v.startsWith('Date(')) {
-        const m = v.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)/);
-        if (m) return new Date(+m[1], +m[2], +m[3], +m[4], +m[5], +m[6]);
+        const nums = v.match(/\d+/g);
+        if (nums && nums.length >= 3) return new Date(+nums[0], +nums[1], +nums[2], +nums[3]||0, +nums[4]||0, +nums[5]||0);
       }
       return new Date(v);
     }
@@ -724,6 +777,7 @@
         btn.classList.add('active');
         document.querySelectorAll('.subtab-content').forEach(sc => sc.classList.remove('active'));
         document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+        if (btn.dataset.subtab === 'invoice-tracker') loadInvoiceTracker();
       });
     });
 
@@ -798,6 +852,61 @@
     function renderPrimary() {
       renderPrimaryOrder();
       renderPrimaryIntransit();
+    }
+
+    let invoiceData = [];
+
+    async function loadInvoiceTracker() {
+      const tbody = document.getElementById('invoiceBody');
+      const thead = document.getElementById('invoiceHead');
+      tbody.innerHTML = '<tr><td colspan="10" class="no-orders">Loading...</td></tr>';
+      try {
+        const res = await fetch(INVOICE_URL);
+        const text = await res.text();
+        const json = parseGvizJson(text);
+        const cols = json.table.cols.filter(c => c.label);
+        const rows = json.table.rows.map((r, ri) => {
+          const row = { _rowIdx: ri + 2 };
+          cols.forEach((c, ci) => {
+            let v = r.c[ci]?.v ?? '';
+            if (c.type === 'date' && typeof v === 'string' && v.startsWith('Date(')) v = parseDate(v);
+            row[c.label] = v;
+          });
+          return row;
+        });
+        invoiceData = rows;
+        renderInvoiceTracker(cols);
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-orders">Failed to load invoice data.</td></tr>';
+      }
+    }
+
+    function renderInvoiceTracker(cols) {
+      const thead = document.getElementById('invoiceHead');
+      const tbody = document.getElementById('invoiceBody');
+      if (invoiceData.length === 0) {
+        thead.querySelector('tr').innerHTML = '';
+        tbody.innerHTML = '<tr><td colspan="10" class="no-orders">No invoice records.</td></tr>';
+        return;
+      }
+      thead.querySelector('tr').innerHTML = cols.map(c => `<th>${c.label}</th>`).join('') + '<th>Action</th>';
+      tbody.innerHTML = invoiceData.map((row, ri) => {
+        const cells = cols.map(c => {
+          let val = row[c.label] ?? '';
+          if (c.label === 'DATE' && val instanceof Date && !isNaN(val)) val = val.toLocaleDateString();
+          if (c.label === 'STATUS') val = `<span class="status-badge status-${val.replace(/\s+/g, '-')}">${val}</span>`;
+          return `<td>${val}</td>`;
+        }).join('');
+        const status = row['STATUS'] || '';
+        const receivedDisabled = status === 'Received' ? 'disabled style="opacity:0.4;"' : '';
+        return `<tr>
+          ${cells}
+          <td>
+            <button class="save-btn inv-edit-btn" data-ri="${ri}" style="padding:0.15rem 0.5rem;font-size:0.8rem;">Edit</button>
+            <button class="save-btn inv-received-btn" data-ri="${ri}" ${receivedDisabled} style="padding:0.15rem 0.5rem;font-size:0.8rem;background:var(--success-bg);color:var(--success-text);">Received</button>
+          </td>
+        </tr>`;
+      }).join('');
     }
 
     document.getElementById('orderBtn').addEventListener('click', () => {
@@ -938,6 +1047,121 @@
         showMsg('Auto update failed.', 'error');
       } finally {
         btn.disabled = false; btn.textContent = 'Auto Update';
+      }
+    });
+
+    function addInvoiceItemRow() {
+      const tbody = document.getElementById('invItemsBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="inv-model" placeholder="Model" style="width:100%;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;box-sizing:border-box;"></td>
+        <td><input type="number" class="inv-qty" value="1" min="1" style="width:70px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;"></td>
+        <td><button class="cancel-btn" style="padding:0.15rem 0.5rem;font-size:0.8rem;">✕</button></td>
+      `;
+      tr.querySelector('.cancel-btn').addEventListener('click', () => tr.remove());
+      tbody.appendChild(tr);
+    }
+
+    document.getElementById('addInvoiceBtn').addEventListener('click', () => {
+      document.getElementById('invNumber').value = '';
+      document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+      document.getElementById('invItemsBody').innerHTML = '';
+      addInvoiceItemRow();
+      document.getElementById('invoiceModal').classList.add('active');
+    });
+
+    document.getElementById('addInvItemBtn').addEventListener('click', () => addInvoiceItemRow());
+
+    document.getElementById('invModalCancel').addEventListener('click', () => {
+      document.getElementById('invoiceModal').classList.remove('active');
+    });
+
+    document.getElementById('invModalSubmit').addEventListener('click', async () => {
+      const invNo = document.getElementById('invNumber').value.trim();
+      const invDate = document.getElementById('invDate').value;
+      if (!invNo) { showMsg('Invoice number is required.', 'error'); return; }
+      const items = Array.from(document.querySelectorAll('#invItemsBody tr')).map(tr => ({
+        model: tr.querySelector('.inv-model').value.trim(),
+        qty: parseFloat(tr.querySelector('.inv-qty').value) || 0
+      })).filter(i => i.model);
+      if (items.length === 0) { showMsg('Add at least one item.', 'error'); return; }
+      const btn = document.getElementById('invModalSubmit');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        await Promise.all(items.map(item =>
+          fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'addInvoiceRows', invoiceNo: invNo, date: invDate, ...item })
+          })
+        ));
+        document.getElementById('invoiceModal').classList.remove('active');
+        showMsg('Invoice saved.', 'success');
+        loadInvoiceTracker();
+      } catch (e) {
+        showMsg('Failed to save invoice.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Invoice';
+      }
+    });
+
+    let editingRowIdx = null;
+
+    document.addEventListener('click', async e => {
+      const editBtn = e.target.closest('.inv-edit-btn');
+      if (editBtn) {
+        const ri = parseInt(editBtn.dataset.ri);
+        const row = invoiceData[ri];
+        editingRowIdx = row._rowIdx;
+        document.getElementById('editInvInvoice').value = row['INVOICE'] || '';
+        document.getElementById('editInvModel').value = row['MODEL'] || '';
+        document.getElementById('editInvQty').value = row['QTY'] || '';
+        document.getElementById('invEditModal').classList.add('active');
+      }
+      const recvBtn = e.target.closest('.inv-received-btn');
+      if (recvBtn) {
+        const ri = parseInt(recvBtn.dataset.ri);
+        const row = invoiceData[ri];
+        recvBtn.disabled = true;
+        try {
+          await fetch(UPDATE_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateInvoiceStatus', index: row._rowIdx, status: 'Received' })
+          });
+          showMsg('Marked as Received.', 'success');
+          loadInvoiceTracker();
+        } catch (e) {
+          showMsg('Failed to update.', 'error');
+          recvBtn.disabled = false;
+        }
+      }
+    });
+
+    document.getElementById('invEditCancel').addEventListener('click', () => {
+      document.getElementById('invEditModal').classList.remove('active');
+    });
+
+    document.getElementById('invEditSubmit').addEventListener('click', async () => {
+      const invoiceNo = document.getElementById('editInvInvoice').value.trim();
+      const model = document.getElementById('editInvModel').value.trim();
+      const qty = parseInt(document.getElementById('editInvQty').value, 10) || 0;
+      if (!invoiceNo || !model || !qty) { showMsg('Fill all fields.', 'error'); return; }
+      const btn = document.getElementById('invEditSubmit');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        await fetch(UPDATE_URL, {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'updateInvoiceRow', index: editingRowIdx, invoiceNo, model, qty })
+        });
+        document.getElementById('invEditModal').classList.remove('active');
+        showMsg('Invoice updated.', 'success');
+        loadInvoiceTracker();
+      } catch (e) {
+        showMsg('Failed to update.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save';
       }
     });
 
