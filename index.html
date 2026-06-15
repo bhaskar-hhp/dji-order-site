@@ -66,22 +66,15 @@
     }
     .logo { color: var(--primary); font-weight: 700; font-size: 1.25rem; }
 
-    #themeBtn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text);
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-size: 1.125rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-      padding: 0;
-    }
-    #themeBtn:hover { background: var(--border); }
+    .theme-toggle { display: flex; align-items: center; gap: 0.5rem; }
+    .theme-label { font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border); transition: 0.3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: 0.3s; border-radius: 50%; }
+    input:checked + .slider { background: var(--primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
 
     /* Tabs */
     .tab-bar { display: flex; gap: 0; margin-bottom: 1.5rem; background: var(--surface); border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--border); }
@@ -195,7 +188,14 @@
   <div class="container">
     <div class="header">
       <div class="logo">DJI Sales</div>
-      <button id="themeBtn" title="Toggle theme">🌙</button>
+      <div class="theme-toggle">
+        <span class="theme-label">Dark</span>
+        <label class="switch">
+          <input type="checkbox" id="themeSwitch">
+          <span class="slider"></span>
+        </label>
+        <span class="theme-label">Light</span>
+      </div>
     </div>
 
     <div class="tab-bar">
@@ -355,11 +355,11 @@
 
     // ── Theme Toggle ──
     const body = document.body;
-    const themeBtn = document.getElementById('themeBtn');
+    const themeSwitch = document.getElementById('themeSwitch');
     body.classList.remove('light');
-    themeBtn.addEventListener('click', () => {
+    themeSwitch.checked = false;
+    themeSwitch.addEventListener('change', () => {
       body.classList.toggle('light');
-      themeBtn.textContent = body.classList.contains('light') ? '🌙' : '☀️';
     });
 
     // ── Tab Switching ──
