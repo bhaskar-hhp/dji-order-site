@@ -289,6 +289,7 @@
       <div class="card">
         <h1>Price & Stock</h1>
         <p class="subtitle">Product pricing and stock information</p>
+        <input type="text" id="priceSearch" class="date-filter" placeholder="🔍 Search model..." style="width:100%;margin-bottom:0.75rem;">
         <div class="orders-table-wrap">
           <table class="orders-table">
             <thead id="priceHead">
@@ -456,8 +457,33 @@
     });
 
     // ── Load Price Tab ──
-    async function loadPrices() {
+    let priceDataRows = [];
+    let priceStockMap = {};
+
+    function renderPriceTable(query) {
       const thead = document.getElementById('priceHead').querySelector('tr');
+      const tbody = document.getElementById('priceBody');
+      const headers = ['MODEL', 'MRP', 'MOP', 'DP', 'STOCK'];
+      thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+      const filtered = query
+        ? priceDataRows.filter(r => (r.c?.[0]?.v || '').toLowerCase().includes(query.toLowerCase()))
+        : priceDataRows;
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-orders">No models match your search.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td>${r.c?.[0]?.v ?? ''}</td>
+          <td>${r.c?.[1]?.v ?? ''}</td>
+          <td>${r.c?.[2]?.v ?? ''}</td>
+          <td>${r.c?.[3]?.v ?? ''}</td>
+          <td>${priceStockMap[(r.c?.[0]?.v || '').toString().trim()] ?? 0}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadPrices() {
       const tbody = document.getElementById('priceBody');
       tbody.innerHTML = '<tr><td colspan="5" class="no-orders">Loading prices...</td></tr>';
       try {
@@ -465,37 +491,32 @@
         const [priceText, stockText] = await Promise.all([priceRes.text(), stockRes.text()]);
         const json = parseGvizJson(priceText);
         const stockJson = parseGvizJson(stockText);
-        const stockMap = {};
+        priceStockMap = {};
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) stockMap[model] = r.c?.[1]?.v ?? 0;
+          if (model) priceStockMap[model] = r.c?.[1]?.v ?? 0;
         });
         const rows = json.table.rows || [];
-        const dataRows = rows.filter((r, idx) => {
+        priceDataRows = rows.filter((r, idx) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
           if (!model) return false;
           if (idx === 0 && model.toUpperCase() === 'MODEL') return false;
           return true;
         });
-        if (dataRows.length === 0) {
+        if (priceDataRows.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" class="no-orders">No price data found.</td></tr>';
           return;
         }
-        const headers = ['MODEL', 'MRP', 'MOP', 'DP', 'STOCK'];
-        thead.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-        tbody.innerHTML = dataRows.map(r => `
-          <tr>
-            <td>${r.c?.[0]?.v ?? ''}</td>
-            <td>${r.c?.[1]?.v ?? ''}</td>
-            <td>${r.c?.[2]?.v ?? ''}</td>
-            <td>${r.c?.[3]?.v ?? ''}</td>
-            <td>${stockMap[(r.c?.[0]?.v || '').toString().trim()] ?? 0}</td>
-          </tr>
-        `).join('');
+        renderPriceTable('');
+        document.getElementById('priceSearch').value = '';
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="5" class="no-orders">Failed to load prices.</td></tr>';
       }
     }
+
+    document.getElementById('priceSearch').addEventListener('input', function() {
+      renderPriceTable(this.value);
+    });
 
     // ── Load Orders (Status Tab) ──
     let allOrders = [];
