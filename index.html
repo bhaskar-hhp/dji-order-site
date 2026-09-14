@@ -328,7 +328,7 @@
         const models = json.table.rows.slice(1).map(r => r.c[0]?.v).filter(Boolean);
         (pricesJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) dpPriceByModel[model] = r.c?.[3]?.v ?? '-';
+          if (model) dpPriceByModel[model] = r.c?.[6]?.v ?? '-';
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
@@ -475,9 +475,9 @@
       tbody.innerHTML = filtered.map(r => `
         <tr>
           <td>${r.c?.[0]?.v ?? ''}</td>
-          <td>${r.c?.[1]?.v ?? ''}</td>
-          <td>${r.c?.[2]?.v ?? ''}</td>
-          <td>${r.c?.[3]?.v ?? ''}</td>
+          <td>${r.c?.[4]?.v ?? ''}</td>
+          <td>${r.c?.[5]?.v ?? ''}</td>
+          <td>${r.c?.[6]?.v ?? ''}</td>
           <td>${priceStockMap[(r.c?.[0]?.v || '').toString().trim()] ?? 0}</td>
         </tr>
       `).join('');
@@ -559,7 +559,7 @@
         statusStockByModel = {};
         (pricesJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) statusPriceByModel[model] = r.c?.[3]?.v ?? '-';
+          if (model) statusPriceByModel[model] = r.c?.[6]?.v ?? '-';
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
