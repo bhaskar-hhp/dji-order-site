@@ -338,7 +338,7 @@
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) stockByModel[model] = parseStockQty(r.c?.[5]?.v);
+          if (model) stockByModel[model.toLowerCase()] = parseStockQty(r.c?.[5]?.v);
         });
         document.querySelectorAll('.model-select').forEach(sel => {
           models.forEach(m => {
@@ -355,7 +355,7 @@
       const model = row.querySelector('.model-select').value.trim();
       row.querySelector('.price-value').textContent = `Price: ${model ? (dpPriceByModel[model] ?? '-') : '-'}`;
       const stockEl = row.querySelector('.stock-value');
-      const stockValue = model ? (stockByModel[model] ?? 0) : '-';
+      const stockValue = model ? (stockByModel[model.toLowerCase()] ?? 0) : '-';
       stockEl.textContent = `Stock: ${stockValue}`;
       stockEl.classList.toggle('low-stock', String(stockValue) === '0');
     }
@@ -484,7 +484,7 @@
           <td>${r.c?.[4]?.v ?? ''}</td>
           <td>${r.c?.[5]?.v ?? ''}</td>
           <td>${r.c?.[6]?.v ?? ''}</td>
-          <td>${priceStockMap[(r.c?.[0]?.v || '').toString().trim()] ?? 0}</td>
+          <td>${priceStockMap[(r.c?.[0]?.v || '').toString().trim().toLowerCase()] ?? 0}</td>
         </tr>
       `).join('');
     }
@@ -500,7 +500,7 @@
         priceStockMap = {};
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) priceStockMap[model] = parseStockQty(r.c?.[5]?.v);
+          if (model) priceStockMap[model.toLowerCase()] = parseStockQty(r.c?.[5]?.v);
         });
         const rows = json.table.rows || [];
         priceDataRows = rows.filter((r, idx) => {
@@ -569,7 +569,7 @@
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) statusStockByModel[model] = parseStockQty(r.c?.[5]?.v);
+          if (model) statusStockByModel[model.toLowerCase()] = parseStockQty(r.c?.[5]?.v);
         });
         allOrders = json.table.rows.map((r, idx) => ({
           idx,
@@ -579,7 +579,7 @@
           qty: r.c[3]?.v || '',
           status: r.c[4]?.v || 'New',
           price: statusPriceByModel[(r.c[2]?.v || '').toString().trim()] ?? '-',
-          stock: statusStockByModel[(r.c[2]?.v || '').toString().trim()] ?? 0
+          stock: statusStockByModel[(r.c[2]?.v || '').toString().trim().toLowerCase()] ?? 0
         }));
         allOrders.sort((a, b) => {
           const ta = a.date instanceof Date ? a.date.getTime() : NaN;
