@@ -309,13 +309,19 @@
     const MODELS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=model';
     const ORDERS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Order';
     const PRICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Price';
-    const STOCK_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Stock';
+    const STOCK_URL = 'https://docs.google.com/spreadsheets/d/1ApjVYElRHBaq4XQKedhuLYO3TRv6MGvLvNmb_Jsu6x4/gviz/tq?tqx=out:json&gid=1431482232';
     const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxFTbJ6MZXFiV1d3HoUj6a-zPeZ8S9NeXsbep3HM5-68CVQhnWPxrZEDtzj2Dh8sn9IuQ/exec';
     const dpPriceByModel = {};
     const stockByModel = {};
 
     function parseGvizJson(text) {
       return JSON.parse(text.replace(/^\/\*O_o\*\/\s*/, '').replace(/google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, ''));
+    }
+
+    function parseStockQty(v) {
+      const s = (v || '').toString().trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
     }
 
     async function loadModels() {
@@ -332,7 +338,7 @@
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) stockByModel[model] = r.c?.[1]?.v ?? 0;
+          if (model) stockByModel[model] = parseStockQty(r.c?.[5]?.v);
         });
         document.querySelectorAll('.model-select').forEach(sel => {
           models.forEach(m => {
@@ -494,7 +500,7 @@
         priceStockMap = {};
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) priceStockMap[model] = r.c?.[1]?.v ?? 0;
+          if (model) priceStockMap[model] = parseStockQty(r.c?.[5]?.v);
         });
         const rows = json.table.rows || [];
         priceDataRows = rows.filter((r, idx) => {
@@ -563,7 +569,7 @@
         });
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          if (model) statusStockByModel[model] = r.c?.[1]?.v ?? 0;
+          if (model) statusStockByModel[model] = parseStockQty(r.c?.[5]?.v);
         });
         allOrders = json.table.rows.map((r, idx) => ({
           idx,
