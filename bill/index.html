@@ -410,13 +410,14 @@
   <script>
     const ORDERS_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Order';
     const PRICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Price';
-    const STOCK_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=Stock';
+    const STOCK_URL = 'https://docs.google.com/spreadsheets/d/1ApjVYElRHBaq4XQKedhuLYO3TRv6MGvLvNmb_Jsu6x4/gviz/tq?tqx=out:json&gid=1431482232';
     const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxFTbJ6MZXFiV1d3HoUj6a-zPeZ8S9NeXsbep3HM5-68CVQhnWPxrZEDtzj2Dh8sn9IuQ/exec';
     const INVOICE_URL = 'https://docs.google.com/spreadsheets/d/14v9D58wO_FPx99sZf6HnU9uWak0hTaYUE7EM260XqAI/gviz/tq?tqx=out:json&sheet=invoice-tracker';
 
     let allOrders = [];
     let dpPriceByModel = {};
     let stockByModel = {};
+    let stockNameByModel = {};
     let priceCols = [];
     let priceRows = [];
     let currentFilter = 'All';
@@ -444,6 +445,12 @@
           .replace(/google\.visualization\.Query\.setResponse\(/, '')
           .replace(/\);$/, '')
       );
+    }
+
+    function parseStockQty(v) {
+      const s = (v || '').toString().trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
     }
 
     function populatePartnerFilter() {
@@ -476,10 +483,13 @@
           if (model) dpPriceByModel[model] = dp ?? '';
         });
         stockByModel = {};
+        stockNameByModel = {};
         (stockJson.table?.rows || []).forEach((r) => {
           const model = (r.c?.[0]?.v || '').toString().trim();
-          const stock = r.c?.[1]?.v;
-          if (model) stockByModel[model] = stock ?? '';
+          if (model) {
+            stockNameByModel[model.toLowerCase()] = model;
+            stockByModel[model.toLowerCase()] = parseStockQty(r.c?.[5]?.v);
+          }
         });
         priceCols = (priceJson.table?.cols || []).map(c => c.label || '');
         priceRows = (priceJson.table?.rows || []).map((r, idx) => ({
@@ -495,7 +505,7 @@
           status: r.c[4]?.v || 'New',
           lastUpdate: parseDate(r.c[5]?.v),
           price: dpPriceByModel[(r.c[2]?.v || '').toString().trim()] ?? '',
-          stock: stockByModel[(r.c[2]?.v || '').toString().trim()] ?? 0
+          stock: stockByModel[(r.c[2]?.v || '').toString().trim().toLowerCase()] ?? 0
         }));
         allOrders.sort((a, b) => {
           const ta = a.date instanceof Date ? a.date.getTime() : NaN;
@@ -594,7 +604,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'deductStock', model: order.model, qty: newQty })
             });
-            stockByModel[order.model] = Math.max(0, (parseInt(stockByModel[order.model], 10) || 0) - newQty);
+stockByModel[order.model.toLowerCase()] = Math.max(0, (parseInt(stockByModel[order.model.toLowerCase()], 10) || 0) - newQty);
 
             const shouldCreateRemaining = Number.isFinite(originalQty) && newQty < originalQty;
             if (shouldCreateRemaining) {
@@ -670,7 +680,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'deductStock', model: order.model, qty: newQty })
           });
-          stockByModel[order.model] = Math.max(0, (parseInt(stockByModel[order.model], 10) || 0) - newQty);
+          stockByModel[order.model.toLowerCase()] = Math.max(0, (parseInt(stockByModel[order.model.toLowerCase()], 10) || 0) - newQty);
           const shouldCreateRemaining = Number.isFinite(originalQty) && newQty < originalQty;
           if (shouldCreateRemaining) {
             await fetch(UPDATE_URL, {
@@ -732,7 +742,7 @@
       if (priceRows.length) {
         priceTbody.innerHTML = priceRows.map((r, ri) => {
           const model = r.cells[0] || '';
-          const stock = stockByModel[model] ?? '';
+          const stock = stockByModel[model.toLowerCase()] ?? '';
           return '<tr>' + r.cells.map((v, ci) =>
             `<td>${ci === 0 ? `<span class="model-cell">${v}</span>` : `<input class="cell-input" data-row="${ri}" data-col="${ci}" value="${v}">`}</td>`
           ).join('') + `<td>${stock}</td></tr>`;
@@ -787,20 +797,23 @@
       const zeroModels = Object.entries(stockByModel)
         .filter(([, stock]) => stock === 0 || stock === '' || stock === null || stock === undefined)
         .map(([model]) => model);
-      const existingModels = new Set(newOrders.map(o => o.model));
-      const zeroRows = zeroModels.filter(m => !existingModels.has(m)).map(m => ({
-        isZeroStock: true,
-        model: m,
-        partner: '',
-        qty: '',
-        price: dpPriceByModel[m] ?? '',
-        stock: 0,
-        status: 'New',
-        date: null,
-        lastUpdate: null,
-        rowIndex: null,
-        idx: null
-      }));
+      const existingModels = new Set(newOrders.map(o => o.model.toLowerCase()));
+      const zeroRows = zeroModels.filter(m => !existingModels.has(m)).map(m => {
+        const display = stockNameByModel[m] || m;
+        return {
+          isZeroStock: true,
+          model: display,
+          partner: '',
+          qty: '',
+          price: dpPriceByModel[display] ?? '',
+          stock: 0,
+          status: 'New',
+          date: null,
+          lastUpdate: null,
+          rowIndex: null,
+          idx: null
+        };
+      });
       const rows = [...newOrders, ...zeroRows];
       if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="no-orders">No items to order.</td></tr>';
@@ -1021,7 +1034,7 @@
         const stockCopy = { ...stockByModel };
         const requests = [];
         for (const order of inTransit) {
-          const available = parseInt(stockCopy[order.model], 10) || 0;
+          const available = parseInt(stockCopy[order.model.toLowerCase()], 10) || 0;
           if (available <= 0) continue;
           const allocate = Math.min(available, parseInt(order.qty, 10) || 1);
           requests.push(
@@ -1031,11 +1044,11 @@
               body: JSON.stringify({ action: 'updateStatus', index: order.rowIndex, status: 'New', qty: allocate, lastUpdate: new Date().toISOString() })
             })
           );
-          stockCopy[order.model] = available - allocate;
+          stockCopy[order.model.toLowerCase()] = available - allocate;
           order.status = 'New';
           order.qty = allocate;
           order.lastUpdate = new Date();
-          stockByModel[order.model] = stockCopy[order.model];
+          stockByModel[order.model.toLowerCase()] = stockCopy[order.model.toLowerCase()];
           updated++;
         }
         if (updated === 0) { showMsg('No in-transit items with available stock.', 'info'); return; }
